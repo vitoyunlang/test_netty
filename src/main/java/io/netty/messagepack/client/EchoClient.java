@@ -8,27 +8,31 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.messagepack.coder.MsgpackDecoder;
 import io.netty.messagepack.coder.MsgpackEncoder;
 
 public class EchoClient {
 
-    public void connect(int port,String host) throws Exception{
+    public void connect(int port, String host) throws Exception {
         EventLoopGroup group = new NioEventLoopGroup();
         Bootstrap bootstrap = new Bootstrap();
         try {
             bootstrap.group(group)
                     .channel(NioSocketChannel.class)
-                    .option(ChannelOption.TCP_NODELAY,true)
+                    .option(ChannelOption.TCP_NODELAY, true)
 //                    .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,3000)
                     .handler(new ChannelInitializer<SocketChannel>() {
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
-                            socketChannel.pipeline().addLast("msgpack decoder",new MsgpackDecoder());
-                            socketChannel.pipeline().addLast("msgpack encoder",new MsgpackEncoder());
+                            socketChannel.pipeline().addLast("frameDecoder", new LengthFieldBasedFrameDecoder(65535, 0, 2, 0, 2));
+                            socketChannel.pipeline().addLast("msgpack decoder", new MsgpackDecoder());
+                            socketChannel.pipeline().addLast("framePrepender",new LengthFieldPrepender(2));
+                            socketChannel.pipeline().addLast("msgpack encoder", new MsgpackEncoder());
                             socketChannel.pipeline().addLast(new EchoClientHandler(10));
                         }
                     });
-            System.out.println("client connect to "+host+":"+port);
+            System.out.println("client connect to " + host + ":" + port);
             ChannelFuture f = bootstrap.connect(host, port).sync();
             f.channel().closeFuture().sync();
         } finally {
@@ -38,7 +42,7 @@ public class EchoClient {
 
     public static void main(String[] args) throws Exception {
         int port = 8080;
-        if (args!= null && args.length>0){
+        if (args != null && args.length > 0) {
             try {
                 port = Integer.parseInt(args[0]);
             } catch (NumberFormatException e) {

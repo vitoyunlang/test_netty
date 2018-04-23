@@ -1,10 +1,13 @@
 package io.netty.messagepack.dto;
 
+import org.msgpack.annotation.Message;
+
 import java.io.Serializable;
 
 /**
  * 测试编码解码的传输类
  */
+@Message
 public class UserInfo implements Serializable{
 
     private String name;

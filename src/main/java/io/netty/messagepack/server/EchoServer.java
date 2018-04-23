@@ -8,6 +8,8 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.messagepack.coder.MsgpackDecoder;
 import io.netty.messagepack.coder.MsgpackEncoder;
 
@@ -24,7 +26,9 @@ public class EchoServer {
                     .option(ChannelOption.SO_BACKLOG, 1024)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
+                            socketChannel.pipeline().addLast("frameDecoder", new LengthFieldBasedFrameDecoder(65535, 0, 2, 0, 2));
                             socketChannel.pipeline().addLast("msgpack decoder",new MsgpackDecoder());
+                            socketChannel.pipeline().addLast("framePrepender",new LengthFieldPrepender(2));
                             socketChannel.pipeline().addLast("msgpack encoder",new MsgpackEncoder());
                             socketChannel.pipeline().addLast(new EchoServerHandler());
                         }

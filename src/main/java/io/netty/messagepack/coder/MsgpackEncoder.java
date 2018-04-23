@@ -11,10 +11,13 @@ import org.msgpack.MessagePack;
  * MessagePack 编码器
  */
 public class MsgpackEncoder extends MessageToByteEncoder{
+
+    public static volatile int count = 0;
+
     protected void encode(ChannelHandlerContext channelHandlerContext, Object o, ByteBuf byteBuf) throws Exception {
+        System.out.println("MsgpackEncoder start to work ,And count : " + ++count);
         MessagePack messagePack = new MessagePack();
         byte[] bytes = messagePack.write(o);
-        System.out.println("MsgpackEncoder encode "+JSON.toJSONString(o));
         byteBuf.writeBytes(bytes);
     }
 }
